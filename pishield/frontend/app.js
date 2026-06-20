@@ -23,6 +23,14 @@ async function authenticateUser() {
         console.error(err);
     }
 }
+if (window.Pi) {
+
+    console.log("Pi Browser detected");
+
+} else {
+
+    alert("Please open in Pi Browser");
+}
 
 function onIncompletePaymentFound(payment) {
 
