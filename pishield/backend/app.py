@@ -3,9 +3,14 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
-from config import PI_APP_NAME, PI_APP_URL, PI_NETWORK, PI_SANDBOX, PI_SANDBOX_URL
-from security_engine import SecurityEngine
-from wallet_manager import build_device_fingerprint
+if __package__:
+    from .config import PI_APP_NAME, PI_APP_URL, PI_NETWORK, PI_SANDBOX, PI_SANDBOX_URL
+    from .security_engine import SecurityEngine
+    from .wallet_manager import build_device_fingerprint
+else:
+    from config import PI_APP_NAME, PI_APP_URL, PI_NETWORK, PI_SANDBOX, PI_SANDBOX_URL
+    from security_engine import SecurityEngine
+    from wallet_manager import build_device_fingerprint
 
 app = Flask(__name__)
 CORS(app)
@@ -69,7 +74,8 @@ def frontend_config():
 def create_mfa_challenge():
     payload = request.get_json(silent=True) or {}
     username = payload.get("username", "pi_sandbox_user")
-    return jsonify(security_engine.create_mfa_challenge(username))
+    pi_auth_uid = payload.get("pi_auth_uid")
+    return jsonify(security_engine.create_mfa_challenge(username, pi_auth_uid=pi_auth_uid))
 
 
 @app.route("/api/wallet/fingerprint", methods=["POST"])
@@ -86,6 +92,13 @@ def fingerprint():
 @app.route("/api/wallet/rotate-passphrase", methods=["POST"])
 def rotate_passphrase():
     payload = request.get_json(silent=True) or {}
+    pi_auth_uid = payload.get("pi_auth_uid")
+    if "pi_auth_uid" in payload and (not isinstance(pi_auth_uid, str) or not pi_auth_uid.strip()):
+        return jsonify({
+            "error": "invalid_pi_auth_uid",
+            "message": "If provided, pi_auth_uid must be a non-empty string.",
+        }), 400
+
     result, status = security_engine.rotate_passphrase(
         username=payload.get("username", "pi_sandbox_user"),
         current_passphrase=payload.get("current_passphrase", ""),
@@ -93,6 +106,7 @@ def rotate_passphrase():
         biometric_confirmed=bool(payload.get("biometric_confirmed")),
         device_fingerprint=payload.get("device_fingerprint", ""),
         mfa_challenge_id=payload.get("mfa_challenge_id"),
+        pi_auth_uid=pi_auth_uid.strip() if isinstance(pi_auth_uid, str) else None,
     )
     return jsonify(result), status
 

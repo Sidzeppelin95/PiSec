@@ -64,7 +64,11 @@ async function postJson(path, body) {
 }
 
 async function prepareSecurityContext(username) {
-    latestMfaChallenge = await postJson("/api/mfa/challenge", { username });
+    const piAuthUid = latestAuth?.user?.uid || null;
+    latestMfaChallenge = await postJson("/api/mfa/challenge", {
+        username,
+        pi_auth_uid: piAuthUid
+    });
     const fingerprint = await postJson("/api/wallet/fingerprint", { username });
     latestDeviceFingerprint = fingerprint.device_fingerprint;
     return {
@@ -77,16 +81,33 @@ async function rotatePassphrase(event) {
     event.preventDefault();
 
     const username = document.getElementById("username").value.trim();
+    const biometricCheckbox = document.getElementById("biometric-confirmed");
+
+    if (!username) {
+        writeOutput("Validation blocked", { error: "Username is required." });
+        return;
+    }
+
+    if (!biometricCheckbox.checked) {
+        writeOutput("Validation blocked", {
+            error: "Please confirm biometric authentication before rotating your passphrase."
+        });
+        return;
+    }
+
     const context = await prepareSecurityContext(username);
+    const piAuthUid = latestAuth?.user?.uid || null;
     const body = {
         username,
         current_passphrase: document.getElementById("current-passphrase").value,
         new_passphrase: document.getElementById("new-passphrase").value,
-        biometric_confirmed: document.getElementById("biometric-confirmed").checked,
+        biometric_confirmed: biometricCheckbox.checked,
         device_fingerprint: context.device_fingerprint,
-        mfa_challenge_id: context.mfa_challenge.challenge_id,
-        pi_auth_uid: latestAuth?.user?.uid || null
+        mfa_challenge_id: context.mfa_challenge.challenge_id
     };
+    if (piAuthUid) {
+        body.pi_auth_uid = piAuthUid;
+    }
 
     try {
         const rotation = await postJson("/api/wallet/rotate-passphrase", body);

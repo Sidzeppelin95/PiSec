@@ -43,9 +43,9 @@ Use the generated `https://*.ngrok-free.app` URL as the Development URL and Sand
 - `GET /app` serves the PiShield sandbox UI.
 - `GET /health` returns server and wallet-security health.
 - `GET /pi/validate` returns Pi sandbox validation metadata.
-- `POST /api/mfa/challenge` creates a biometric MFA challenge.
+- `POST /api/mfa/challenge` creates a biometric MFA challenge and can bind it to an optional `pi_auth_uid`.
 - `POST /api/wallet/fingerprint` returns a demo device fingerprint.
-- `POST /api/wallet/rotate-passphrase` rotates and revokes the previous passphrase after biometric confirmation.
+- `POST /api/wallet/rotate-passphrase` rotates and revokes the previous passphrase after biometric confirmation, rejects invalid `pi_auth_uid` values, and checks the UID against any UID-bound MFA challenge.
 - `GET /api/security/dashboard` returns demo security telemetry.
 
 ## Security notes
