@@ -1,24 +1,51 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PiShield Sandbox</title>
-
+    <link rel="stylesheet" href="/frontend/styles.css">
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
 </head>
-
 <body>
+    <main class="shell">
+        <section class="hero">
+            <p class="eyebrow">Pi Network Sandbox Demo</p>
+            <h1>PiShield passphrase rotation</h1>
+            <p>Protect a demo wallet by rotating a passphrase only after Pi authentication, device fingerprinting, MFA challenge creation, and biometric confirmation.</p>
+            <button id="pi-login" type="button">Login with Pi</button>
+            <p id="pi-status" class="status">Checking Pi Browser…</p>
+        </section>
 
-    <h1>PiShield Sandbox Running</h1>
+        <section class="card">
+            <h2>Rotate wallet passphrase</h2>
+            <form id="rotation-form">
+                <label>
+                    Pi username
+                    <input id="username" name="username" value="pi_sandbox_user" required>
+                </label>
+                <label>
+                    Current passphrase
+                    <input id="current-passphrase" name="current_passphrase" type="password" minlength="12" required>
+                </label>
+                <label>
+                    New passphrase
+                    <input id="new-passphrase" name="new_passphrase" type="password" minlength="12" required>
+                </label>
+                <label class="check">
+                    <input id="biometric-confirmed" name="biometric_confirmed" type="checkbox" required>
+                    Biometric confirmation completed in Pi Browser
+                </label>
+                <button type="submit">Rotate passphrase securely</button>
+            </form>
+        </section>
 
-    <button onclick="authenticateUser()">
-        Login with Pi
-    </button>
+        <section class="card">
+            <h2>Sandbox security telemetry</h2>
+            <pre id="output">Ready.</pre>
+        </section>
+    </main>
 
-    <script src="app.js"></script>
-
+    <script src="/frontend/app.js"></script>
 </body>
-
 </html>
