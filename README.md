@@ -270,9 +270,3 @@ Testing includes:
 ## Disclaimer
 
 This repository is a research and development prototype intended to demonstrate secure wallet recovery concepts and passphrase rotation workflows. It is not affiliated with or endorsed by the Pi Core Team and should not be used in production without comprehensive security review, testing, and integration with the official Pi platform.
-
----
-
-## License
-
-This project is released under the MIT License.
