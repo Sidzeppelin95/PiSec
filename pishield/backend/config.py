@@ -1,45 +1,33 @@
--PI_SANDBOX = True
-+"""PiShield sandbox configuration.
- 
--PI_APP_NAME = "PiShield"
+
+""PiShield sandbox configuration.
+
 +Values default to the Pi Developer Portal sandbox settings and can be
 +overridden with environment variables for local/ngrok development.
-+"""
+""
  
--PI_API_KEY = "YOUR_PI_API_KEY"
-+import os
-+from dotenv import load_dotenv
+
+import os
+from dotenv import load_dotenv
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
  
--PI_NETWORK = "Pi Testnet"
-+load_dotenv()
- 
--PI_APP_URL = "http://localhost:31415"
- 
--PI_SANDBOX_URL = "https://sandbox.minepi.com"
-+def _env_bool(name: str, default: bool) -> bool:
-+    value = os.getenv(name)
-+    if value is None:
-+        return default
-+    return value.strip().lower() in {"1", "true", "yes", "on"}
- 
--PRIVACY_POLICY_URL = (
--    "https://pishield.pinet.com/privacy-policy"
--)
- 
--TERMS_OF_SERVICE_URL = (
--    "https://pishield.pinet.com/terms"
-+PI_SANDBOX = _env_bool("PI_SANDBOX", True)
-+PI_APP_NAME = os.getenv("PI_APP_NAME", "PiShield")
-+PI_API_KEY = os.getenv("PI_API_KEY", "YOUR_PI_API_KEY")
-+PI_NETWORK = os.getenv("PI_NETWORK", "Pi Testnet")
-+PI_APP_URL = os.getenv("PI_APP_URL", "http://localhost:31415")
-+PI_API_URL = os.getenv("PI_API_URL", "https://api.minepi.com")
-+PI_SANDBOX_URL = os.getenv("PI_SANDBOX_URL", "https://sandbox.minepi.com")
-+PRIVACY_POLICY_URL = os.getenv(
-+    "PRIVACY_POLICY_URL",
-+    "https://pishield.pinet.com/privacy-policy",
-+)
-+TERMS_OF_SERVICE_URL = os.getenv(
-+    "TERMS_OF_SERVICE_URL",
+
+
+PI_SANDBOX = _env_bool("PI_SANDBOX", True)
+PI_APP_NAME = os.getenv("PI_APP_NAME", "PiShield")
+PI_API_KEY = os.getenv("PI_API_KEY", "YOUR_PI_API_KEY")
+PI_NETWORK = os.getenv("PI_NETWORK", "Pi Testnet")
+PI_APP_URL = os.getenv("PI_APP_URL", "http://localhost:31415")
+PI_API_URL = os.getenv("PI_API_URL", "https://api.minepi.com")
+PI_SANDBOX_URL = os.getenv("PI_SANDBOX_URL", "https://sandbox.minepi.com")
+PRIVACY_POLICY_URL = os.getenv(
+    "PRIVACY_POLICY_URL",
+    "https://pishield.pinet.com/privacy-policy",
+)
+TERMS_OF_SERVICE_URL = os.getenv(
+    "TERMS_OF_SERVICE_URL",
 +    "https://pishield.pinet.com/terms",
  )
