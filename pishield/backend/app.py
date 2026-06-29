@@ -1,8 +1,3 @@
-diff --git a/pishield/backend/app.py b/pishield/backend/app.py
-index af312caab9b86a56da1a26fabffba61c28b50478..d2bf64534aa72d749356ddac40650e57b143c30b 100644
---- a/pishield/backend/app.py
-+++ b/pishield/backend/app.py
-@@ -1,40 +1,120 @@
 -from flask import Flask, jsonify
 +from pathlib import Path
 +
