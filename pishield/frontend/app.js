@@ -1,8 +1,3 @@
-diff --git a/pishield/frontend/app.js b/pishield/frontend/app.js
-index 54acb93e5e46f54baa8d197b7562bee631e376a9..7ef7a7228921c70361f12afedb5007162c212f81 100644
---- a/pishield/frontend/app.js
-+++ b/pishield/frontend/app.js
-@@ -1,38 +1,128 @@
  const Pi = window.Pi;
 +const apiBase = window.location.protocol === "file:" ? "http://localhost:31415" : window.location.origin;
 +let latestAuth = null;
