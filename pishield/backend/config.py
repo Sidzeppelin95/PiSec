@@ -1,8 +1,8 @@
 
 ""PiShield sandbox configuration.
 
-+Values default to the Pi Developer Portal sandbox settings and can be
-+overridden with environment variables for local/ngrok development.
+Values default to the Pi Developer Portal sandbox settings and can be
+overridden with environment variables for local/ngrok development.
 ""
  
 
@@ -29,5 +29,5 @@ PRIVACY_POLICY_URL = os.getenv(
 )
 TERMS_OF_SERVICE_URL = os.getenv(
     "TERMS_OF_SERVICE_URL",
-+    "https://pishield.pinet.com/terms",
+    "https://pishield.pinet.com/terms",
  )
