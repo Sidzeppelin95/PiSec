@@ -1,17 +1,24 @@
 """Demo security primitives for PiShield.
- 
-+This module intentionally keeps state in memory because the project is a
-+sandbox demonstration. Production deployments should persist audit trails,
-+store only salted password hashes, validate Pi auth tokens server-side, and
-+separate sandbox/mainnet databases.
+
+This module intentionally keeps state in memory because the project is a
+sandbox demonstration. Production deployments should persist audit trails,
+store only salted password hashes, validate Pi auth tokens server-side, and
+separate sandbox/mainnet databases.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from hashlib import sha256
+from datetime import datetime, timedelta, timezone
+import ipaddress
 from secrets import token_hex
 from typing import Any
+
+try:
+    from .config import PiOSConfig
+    from .security_shared import ConnectionMetadata, SecurityUtils, Wallet, utc_now
+except ImportError:  # Supports running the backend as a script.
+    from config import PiOSConfig
+    from security_shared import ConnectionMetadata, SecurityUtils, Wallet, utc_now
 
 
 @dataclass
@@ -148,8 +155,86 @@ class SecurityEngine:
 
     @staticmethod
     def _hash(value: str) -> str:
-        return sha256(value.encode("utf-8")).hexdigest()
+        return SecurityUtils.hash_passphrase(value)
 
     @staticmethod
     def _now() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+
+@dataclass
+class SecurityEvent:
+    """An event that may require analyst review."""
+
+    event_id: str
+    wallet_username: str
+    created_at: datetime = field(default_factory=utc_now)
+    status: str = "PENDING_REVIEW"
+    analyst_notes: str = ""
+
+
+security_events_db: dict[str, SecurityEvent] = {}
+
+
+class PiTrustAnalyzer:
+    """Calculate risk from explicit connection facts and not device-ID text."""
+
+    @staticmethod
+    def calculate_risk_score(
+        device_id: str,
+        connection: ConnectionMetadata | None = None,
+    ) -> int:
+        """Return a bounded risk score for the supplied connection metadata.
+
+        ``device_id`` remains available for device-recognition logic, but it is
+        intentionally not parsed for network labels such as "vpn" or "tor".
+        """
+        del device_id
+        connection = connection or ConnectionMetadata()
+        score = 0
+        if connection.uses_vpn:
+            score += 20
+        if connection.uses_tor:
+            score += 35
+
+        if connection.ip_address:
+            try:
+                ip_obj = ipaddress.ip_address(connection.ip_address)
+            except ValueError:
+                pass
+            else:
+                if ip_obj.is_private:
+                    score -= 10
+        return max(0, min(100, score))
+
+
+class PiSecurityEngine:
+    """Coordinates recovery responses without importing the wallet manager."""
+
+    def trigger_response(self, wallet: Wallet) -> None:
+        """Lock a wallet for the configured recovery period after an incident."""
+        wallet.recovery_locked_until = utc_now() + timedelta(
+            hours=PiOSConfig.RECOVERY_LOCK_HOURS
+        )
+
+
+class PiSecurityReviewSystem:
+    """Analyst review workflow for flagged security events."""
+
+    @staticmethod
+    def review_event(event_id: str, suspicious: bool, notes: str) -> SecurityEvent:
+        event = security_events_db.get(event_id)
+        if event is None:
+            raise ValueError("Security event not found")
+
+        event.analyst_notes = notes
+        if suspicious:
+            PiSecurityReviewSystem.take_action(event)
+        else:
+            event.status = "CLEARED"
+        return event
+
+    @staticmethod
+    def take_action(event: SecurityEvent) -> None:
+        """Mark a reviewed event as confirmed phishing activity."""
+        event.status = "CONFIRMED_PHISHING_ACTIVITY"
