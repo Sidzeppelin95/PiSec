@@ -135,6 +135,16 @@ class SecurityEngine:
             "mfa_challenges": list(self.mfa_challenges.values())[-10:],
         }
 
+    def record_security_event(
+        self,
+        username: str,
+        reason: str,
+        *,
+        device_fingerprint: str = "recovery-service",
+    ) -> None:
+        """Record a sandbox security signal without assigning user intent."""
+        self._flag(username, device_fingerprint, reason)
+
     def _flag(
         self,
         username: str,
@@ -208,14 +218,22 @@ class PiTrustAnalyzer:
         return max(0, min(100, score))
 
 
+@dataclass
 class PiSecurityEngine:
-    """Coordinates recovery responses without importing the wallet manager."""
+    """Coordinates temporary recovery locks through a narrow wallet contract."""
+
+    general_security: SecurityEngine | None = None
 
     def trigger_response(self, wallet: Wallet) -> None:
-        """Lock a wallet for the configured recovery period after an incident."""
+        """Temporarily lock a wallet after a revoked demo credential is used."""
         wallet.recovery_locked_until = utc_now() + timedelta(
             hours=PiOSConfig.RECOVERY_LOCK_HOURS
         )
+        if self.general_security is not None:
+            self.general_security.record_security_event(
+                wallet.username,
+                "revoked_demo_credential_attempt",
+            )
 
 
 class PiSecurityReviewSystem:

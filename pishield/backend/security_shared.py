@@ -11,6 +11,15 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def normalize_utc(value: datetime | None) -> datetime | None:
+    """Normalize a persisted timestamp to an aware UTC datetime."""
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 @dataclass
 class Wallet:
     """Shared wallet state used by authentication and recovery services."""
@@ -20,6 +29,10 @@ class Wallet:
     created_at: datetime = field(default_factory=utc_now)
     revoked_passphrase_hashes: set[str] = field(default_factory=set)
     recovery_locked_until: datetime | None = None
+
+    def __post_init__(self) -> None:
+        self.created_at = normalize_utc(self.created_at)
+        self.recovery_locked_until = normalize_utc(self.recovery_locked_until)
 
 
 class SecurityUtils:
