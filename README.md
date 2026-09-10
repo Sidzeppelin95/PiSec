@@ -47,6 +47,7 @@ pishield/
 │   ├── app.py
 │   ├── config.py
 │   ├── security_engine.py
+│   ├── security_shared.py
 │   └── wallet_manager.py
 │
 ├── frontend/
@@ -54,6 +55,7 @@ pishield/
 │   ├── app.js
 │   └── styles.css
 │
+├── tests/
 ├── requirements.txt
 └── README.md
 ```
@@ -270,3 +272,42 @@ Testing includes:
 ## Disclaimer
 
 This repository is a research and development prototype intended to demonstrate secure wallet recovery concepts and passphrase rotation workflows. It is not affiliated with or endorsed by the Pi Core Team and should not be used in production without comprehensive security review, testing, and integration with the official Pi platform.
+
+---
+
+## Sandbox security architecture
+
+PiShield is a **sandbox demonstration**. It does not connect to Pi Wallets, change
+real Pi Wallet credentials, transmit credentials to third parties, or represent a
+production credential provider. The demo-only credential hashes stay in process
+memory and are never returned by the API.
+
+The Flask application keeps general MFA, rotation, audit, and dashboard behavior
+in `SecurityEngine`. Its sandbox authentication path is intentionally separate:
+`PiWalletManager` decides whether a demo credential is active, revoked, or
+invalid. It receives `PiSecurityEngine` through the narrow
+`RecoveryResponseHandler` interface. A revoked demo credential is denied and
+causes a temporary recovery lock; it records a security signal, not a conclusion
+that a person is a scammer or that phishing is confirmed.
+
+Wallet timestamps are normalized to timezone-aware UTC at the `Wallet` boundary.
+While a recovery lock is active, all authentication attempts—including active,
+revoked, and invalid demo credentials—are denied. Expired locks do not prevent a
+valid active demo credential from being accepted.
+
+`PiTrustAnalyzer` is advisory only. It accepts explicit connection metadata
+(`uses_vpn`, `uses_tor`, and `ip_address`) rather than inferring network behavior
+from a device ID. VPN/Tor use, IP addresses, and fingerprints do not independently
+identify a user as malicious. Confirmed phishing activity is assigned only by the
+separate analyst review workflow.
+
+### Validation
+
+Run the sandbox regression suite from the repository root:
+
+```bash
+python -m compileall -q pishield
+pytest -q
+python -m pytest -q
+git diff --check
+```
